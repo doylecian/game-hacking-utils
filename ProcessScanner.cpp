@@ -1,36 +1,78 @@
-#include <windows.h>
-#include <tlhelp32.h>
-#include <tchar.h>
 #include "ProcessScanner.h"
+#include <iostream>
 
 // Returns a handle to the process with the given name
-HANDLE PS::getProcessByName(char* processName)
+HANDLE PS::GetProcessByName(const char* processName)
 {
-	//TODO: IMPLEMENT THIS
-	return NULL;
-}
-// Returns a handle to the process with the given ID
-HANDLE PS::getProcessByID(DWORD processID)
-{
-	//TODO: IMPLEMENT THIS
+	HANDLE hProcessSnap;
+	HANDLE targetProcess;
+	PROCESSENTRY32 processEntry;
+
+	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	processEntry.dwSize = sizeof(PROCESSENTRY32);
+
+	if (hProcessSnap == INVALID_HANDLE_VALUE || !Process32First(hProcessSnap, &processEntry))
+	{
+		_tprintf(TEXT("\nError occured trying to find process list"));
+		CloseHandle(hProcessSnap);
+		return(NULL);
+	}
+
+	do
+	{
+		if (!strcmp(processName, processEntry.szExeFile))
+		{
+			CloseHandle(hProcessSnap);
+			targetProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processEntry.th32ProcessID);
+			return(targetProcess);
+		}
+	} while (Process32Next(hProcessSnap, &processEntry));
 	return NULL;
 }
 
-// Prints all the currently running processes to the terminal
+// Returns a handle to the process with the given ID
+HANDLE PS::GetProcessByID(DWORD processID)
+{
+	HANDLE hProcessSnap;
+	HANDLE targetProcess;
+	PROCESSENTRY32 processEntry;
+
+	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	processEntry.dwSize = sizeof(PROCESSENTRY32);
+
+	if (hProcessSnap == INVALID_HANDLE_VALUE || !Process32First(hProcessSnap, &processEntry))
+	{
+		_tprintf(TEXT("\nError occured trying to find process list"));
+		CloseHandle(hProcessSnap);
+		return(NULL);
+	}
+
+	do
+	{
+		if (processID == processEntry.th32ProcessID)
+		{
+			CloseHandle(hProcessSnap);
+			targetProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processEntry.th32ProcessID);
+			return(targetProcess);
+		}
+	} while (Process32Next(hProcessSnap, &processEntry));
+}
+
 BOOL PS::GetProcessList()
 {
 	HANDLE hProcessSnap;
 	PROCESSENTRY32 processEntry;
 
-	// Take a snapshot of all processes
 	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
-	if (hProcessSnap != INVALID_HANDLE_VALUE && Process32First(hProcessSnap, &processEntry))
+	if (hProcessSnap == INVALID_HANDLE_VALUE || !Process32First(hProcessSnap, &processEntry))
 	{
-		// Set the size of the structure before using it.
+		CloseHandle(hProcessSnap);
+		return(FALSE);
+	}
+	else
+	{
 		processEntry.dwSize = sizeof(PROCESSENTRY32);
-
-		// Iterate through processes and print them to terminal
 		do
 		{
 			_tprintf(TEXT("\nPROCESS NAME:  %s"), processEntry.szExeFile);
