@@ -1,19 +1,29 @@
 #include <iostream>
 #include <tchar.h>
-#include "ProcessScanner.h"
+#include "ProcessUtils.h"
+#include "MemoryUtils.h"
+
+
 
 int main()
 {
-	//PS::GetProcessList();
-	DWORD processID = 0x0000196C;
-	const char* processName = "firefox.exe";
 
-	if (PS::GetProcessByID(processID))
+	HANDLE gameHandle = process::GetProcessByName("left4dead.exe");
+	DWORD processID = GetProcessId(gameHandle);
+	uintptr_t gameBaseAddress = memory::GetBaseAddress(processID);
+	uintptr_t clientBaseAddress = memory::GetBaseModuleAddress(processID, L"client.dll");
+
+	if (gameHandle)
 	{
-		_tprintf(TEXT("\nFound process of ID 0x%08X"), processID);
+		_tprintf(TEXT("\nFound game handle"));
+		_tprintf(TEXT("\nFound process ID of game: %d [0x%X]"), processID, processID);
+		_tprintf(TEXT("\nFound game base address: %d [0x%X]"), gameBaseAddress, gameBaseAddress);
+		_tprintf(TEXT("\nFound client module base address: %d [0x%X]"), clientBaseAddress, clientBaseAddress);
 	}
-	if (PS::GetProcessByName(processName))
-	{
-		_tprintf(TEXT("\nFound process by name %s"), processName);
-	}
+
+	int close;
+	std::cin >> close;
+
+	CloseHandle(gameHandle);
+
 }
