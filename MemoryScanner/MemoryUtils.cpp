@@ -1,4 +1,3 @@
-// Prints list of currently running processes
 #include "MemoryUtils.h"
 
 uintptr_t memory::GetBaseAddress(DWORD processID)
@@ -51,4 +50,14 @@ uintptr_t memory::GetBaseModuleAddress(DWORD processID, const wchar_t * moduleNa
 	}
 	CloseHandle(hSnap);
 	return modBaseAddr;
+}
+
+uintptr_t memory::ResolvePointerChain(HANDLE processHandle, uintptr_t baseAddress, std::vector<int> offsets)
+{
+	uintptr_t tempAddress = baseAddress;
+	for (int i = 0; i < offsets.size(); i++)
+	{
+		ReadProcessMemory(processHandle, (PBYTE*)(tempAddress + offsets[i]), &tempAddress, sizeof(tempAddress), 0);
+	}
+	return tempAddress;
 }
