@@ -67,3 +67,15 @@ pub fn get_process_base_address(pid: u32) -> Option<usize> {
         }
     }
 }
+
+pub fn read_mem_addr(handle: HANDLE, addr: usize, buffer_size: i8) -> Option<usize> {
+    let mut data: *mut c_void = ptr::null_mut();
+    let lp_buffer: *mut c_void = <*mut _>::cast(&mut data);
+    //let nsize = size_of::<usize>();
+    let mut bytes: *mut usize = ptr::null_mut();
+    let lp_bytes_read: *mut usize = <*mut _>::cast(&mut bytes);
+    unsafe {
+        if ReadProcessMemory(handle, addr as *const c_void, lp_buffer, buffer_size as usize, lp_bytes_read).as_bool() { return Some(data as usize) }
+        else { None }
+    }
+}
